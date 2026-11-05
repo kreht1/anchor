@@ -1,0 +1,5 @@
+node_modules/
+*.log
+launch.vbs
+.DS_Store
+public/icon-*.ico

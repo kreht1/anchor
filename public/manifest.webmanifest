@@ -1,0 +1,15 @@
+{
+  "name": "Anchor",
+  "short_name": "Anchor",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f6f2",
+  "theme_color": "#f7f6f2",
+  "icons": [
+    {
+      "src": "icon-tile.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

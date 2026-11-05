@@ -1,0 +1,19 @@
+{
+  "name": "anchor",
+  "version": "4.0.0",
+  "description": "Anchor: a local token governor and dashboard for Claude Code. Live agents and diffs, projects, code, studies, skills, usage and limits. Runs only on your computer.",
+  "private": true,
+  "license": "MIT",
+  "main": "server.js",
+  "bin": {
+    "anchor": "bin/anchor.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test/smoke.js && node test/bridge.js && node test/guard.js && node test/skillmatch.js && node test/tokens.js && node test/governor.js"
+  },
+  "author": "Ahmed GHALMI"
+}

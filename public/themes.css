@@ -1,0 +1,201 @@
+/* Anchor themes. Each theme is a token set on [data-theme] (so the gallery can preview it on any element) plus a few
+   surface rules. Families: square (hard edges, offset shadows), soft (radius, depth), flat (print-like, no glow).
+   Semantic accents keep their meaning in every theme: --dia running, --club done, --heart failed, --spade live/Claude, --you you. */
+
+[data-theme="dark"] {
+  --bg: #000; --felt: #050505; --card: #0b0b0b; --card-2: #141414; --ink: #fff; --ink-2: #d4d4d4; --ink-3: #8c8c8c; --rule: #fff; --rule-2: #333;
+  --dia: #ffe600; --club: #39ff14; --heart: #ff2e4d; --spade: #00e5ff; --you: #ff00d4; --focus: #ffe600; --lattice: rgba(255, 255, 255, 0.035);
+  --display: "Bahnschrift", "DIN Condensed", "Arial Narrow", sans-serif; --body: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --mono: "Cascadia Code", "Cascadia Mono", Consolas, ui-monospace, monospace; color-scheme: dark;
+}
+[data-theme] { --run: var(--dia); --done: var(--club); --fail: var(--heart); --claude: var(--spade); }
+
+/* ── Anchor White: the house style. Paper white, ink black, a molten accent, hairlines and soft depth ─────────── */
+[data-theme="anchor"] {
+  --bg: #f7f6f2; --felt: #f1efe9; --card: #ffffff; --card-2: #f4f3ee; --ink: #0c0c0e; --ink-2: #3b3b40; --ink-3: #8b8a90; --rule: #d9d6cf; --rule-2: #e9e7e1;
+  --dia: #ff6b1a; --club: #149a5a; --heart: #d6363f; --spade: #2b59ff; --you: #0c0c0e; --focus: #ff6b1a; --on-accent: #ffffff;
+  --display: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif; --body: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --mono: "Cascadia Mono", Consolas, monospace; --r: 16px; --r-sm: 10px; --r-pill: 999px;
+  --bg-image: radial-gradient(1200px 600px at 85% -10%, rgba(255, 107, 26, 0.06), transparent 60%), radial-gradient(900px 600px at -10% 110%, rgba(43, 89, 255, 0.05), transparent 60%);
+  color-scheme: light;
+}
+[data-theme="anchor"] h1 { font-weight: 650; letter-spacing: -0.035em; font-stretch: 100%; }
+[data-theme="anchor"] h2 { font-weight: 650; letter-spacing: -0.01em; font-stretch: 100%; }
+[data-theme="anchor"] :is(.fs, .sess, .card, .meter, .dl, .plan, .x-card, .x-panel) { border-color: var(--rule-2); box-shadow: 0 1px 0 rgba(12, 12, 14, 0.04), 0 18px 40px -26px rgba(12, 12, 14, 0.35); }
+[data-theme="anchor"] .tilt:hover { translate: 0 -3px; box-shadow: 0 0 0 1px rgba(12, 12, 14, 0.08), 0 24px 50px -24px rgba(12, 12, 14, 0.4); }
+[data-theme="anchor"] .btn.primary { background: var(--ink); color: #fff; border-color: var(--ink); box-shadow: 0 10px 24px -12px rgba(12, 12, 14, 0.6); }
+[data-theme="anchor"] .nav[aria-current="page"] { background: var(--ink); color: #fff; box-shadow: none; }
+[data-theme="anchor"] .nav[aria-current="page"] .count { color: rgba(255, 255, 255, 0.7); }
+[data-theme="anchor"] .chip.run { background: var(--dia); border-color: var(--dia); color: #fff; box-shadow: 0 0 16px rgba(255, 107, 26, 0.45); }
+
+/* ── Obsidian & Gold: black lacquer, champagne gold, engraved serif ───────────────────────────────── */
+[data-theme="obsidian"] {
+  --bg: #0b0a08; --felt: #100e0b; --card: #15120e; --card-2: #1d1913; --ink: #f4ecdb; --ink-2: #d2c7b0; --ink-3: #8f8571; --rule: #4a3f2c; --rule-2: #2b251c;
+  --dia: #e7c46b; --club: #9cc79a; --heart: #e5806a; --spade: #e8d5a3; --you: #c8a2de; --focus: #e7c46b; --on-accent: #1a1408;
+  --display: "Sitka Banner", "Constantia", "Cambria", Georgia, serif; --body: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --mono: "Cascadia Mono", Consolas, monospace; --r: 14px; --r-sm: 9px; --r-pill: 999px;
+  --bg-image: radial-gradient(1200px 520px at 78% -10%, rgba(231, 196, 107, 0.13), transparent 60%), radial-gradient(900px 600px at -10% 110%, rgba(200, 162, 222, 0.07), transparent 60%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .9 0 0 0 0 .7 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  color-scheme: dark;
+}
+/* ── Swiss Grid: paper, ink, one signal colour, modular grid ─────────────────────────────────────── */
+[data-theme="swiss"] {
+  --bg: #f3f2ee; --felt: #ecebe5; --card: #fff; --card-2: #f1f0ea; --ink: #111; --ink-2: #333; --ink-3: #6e6c66; --rule: #111; --rule-2: #d8d6cf;
+  --dia: #ff4f00; --club: #00875a; --heart: #d0021b; --spade: #0047ff; --you: #111; --focus: #0047ff; --on-accent: #fff;
+  --display: "Segoe UI Variable Display", "Helvetica Neue", Arial, sans-serif; --body: "Segoe UI Variable Text", "Helvetica Neue", Arial, sans-serif;
+  --mono: "Cascadia Mono", Consolas, monospace; --r: 3px; --r-sm: 2px; --r-pill: 2px;
+  --bg-image: repeating-linear-gradient(90deg, rgba(17, 17, 17, 0.045) 0 1px, transparent 1px 96px); color-scheme: light;
+}
+/* ── Phosphor: green CRT, scanlines, all monospace ───────────────────────────────────────────────── */
+[data-theme="phosphor"] {
+  --bg: #020904; --felt: #031007; --card: #041409; --card-2: #072011; --ink: #b9ffcc; --ink-2: #86e8a1; --ink-3: #46955f; --rule: #2a8a49; --rule-2: #134226;
+  --dia: #f1ff6e; --club: #39ff88; --heart: #ff6363; --spade: #6ff3ff; --you: #ffa8f2; --focus: #f1ff6e; --on-accent: #021006;
+  --display: "Cascadia Code", "Cascadia Mono", Consolas, monospace; --body: "Cascadia Mono", Consolas, monospace; --mono: "Cascadia Mono", Consolas, monospace;
+  --bg-image: repeating-linear-gradient(0deg, rgba(57, 255, 136, 0.045) 0 1px, transparent 1px 3px), radial-gradient(ellipse at 50% 40%, rgba(57, 255, 136, 0.09), transparent 70%);
+  color-scheme: dark;
+}
+/* ── Sakura Mochi: pastel, rounded, sticker shadows ──────────────────────────────────────────────── */
+[data-theme="sakura"] {
+  --bg: #fff5f8; --felt: #ffeef4; --card: #fff; --card-2: #fff0f5; --ink: #4b2a3b; --ink-2: #6f4b5e; --ink-3: #a5808f; --rule: #f2bfd0; --rule-2: #f8dbe5;
+  --dia: #ff9f4a; --club: #2fb886; --heart: #ff4d7e; --spade: #7f6bff; --you: #ff6fae; --focus: #7f6bff; --on-accent: #fff;
+  --display: "Segoe UI Variable Display", "Nunito", "Segoe UI", sans-serif; --body: "Segoe UI Variable Text", "Segoe UI", sans-serif;
+  --mono: "Cascadia Mono", Consolas, monospace; --r: 22px; --r-sm: 14px; --r-pill: 999px;
+  --bg-image: radial-gradient(#ffd3e1 1.6px, transparent 1.8px), radial-gradient(#e3dcff 1.2px, transparent 1.4px);
+  color-scheme: light;
+}
+/* ── Rosé Atelier: blush, champagne and mauve, italic serif ─────────────────────────────────────── */
+[data-theme="rose"] {
+  --bg: #faf3f0; --felt: #f6ebe6; --card: #fffaf8; --card-2: #f5e8e3; --ink: #3a282e; --ink-2: #5c474e; --ink-3: #9a8388; --rule: #dcbfc0; --rule-2: #ecdcd8;
+  --dia: #c27a55; --club: #5f9a7f; --heart: #b4425c; --spade: #946182; --you: #c76c8c; --focus: #946182; --on-accent: #fff;
+  --display: "Palatino Linotype", "Book Antiqua", "Sitka Display", Georgia, serif; --body: "Segoe UI Variable Text", "Segoe UI", sans-serif;
+  --mono: "Cascadia Mono", Consolas, monospace; --r: 18px; --r-sm: 12px; --r-pill: 999px;
+  --bg-image: radial-gradient(900px 500px at 100% 0%, rgba(199, 108, 140, 0.13), transparent 60%), radial-gradient(800px 600px at 0% 100%, rgba(194, 122, 85, 0.1), transparent 60%);
+  color-scheme: light;
+}
+/* ── Nordic Frost: slate night, ice and aurora ───────────────────────────────────────────────────── */
+[data-theme="frost"] {
+  --bg: #0e1620; --felt: #111b26; --card: #15212d; --card-2: #1b2a38; --ink: #e7eff6; --ink-2: #b8c7d4; --ink-3: #7c90a2; --rule: #2d4152; --rule-2: #213242;
+  --dia: #ffcb5c; --club: #7fd6b1; --heart: #ff7d8c; --spade: #8cc8dc; --you: #b99be0; --focus: #8cc8dc; --on-accent: #0b1219;
+  --display: "Segoe UI Variable Display", "Segoe UI", sans-serif; --body: "Segoe UI Variable Text", "Segoe UI", sans-serif;
+  --mono: "Cascadia Mono", Consolas, monospace; --r: 12px; --r-sm: 8px; --r-pill: 999px;
+  --bg-image: radial-gradient(1100px 420px at 20% -8%, rgba(127, 214, 177, 0.13), transparent 60%), radial-gradient(900px 420px at 90% -10%, rgba(185, 155, 224, 0.12), transparent 60%);
+  color-scheme: dark;
+}
+/* ── Synthwave '84: sunset gradient, neon grid floor ────────────────────────────────────────────── */
+[data-theme="synth"] {
+  --bg: #11041f; --felt: #170629; --card: rgba(30, 9, 52, 0.82); --card-2: #2a0d47; --ink: #fdf0ff; --ink-2: #e2c9f2; --ink-3: #a487c2; --rule: #ff3cd7; --rule-2: #3d1660;
+  --dia: #ffd319; --club: #3dffb0; --heart: #ff3864; --spade: #2de2e6; --you: #ff3cd7; --focus: #2de2e6; --on-accent: #14031f;
+  --display: "Bahnschrift", "Arial Narrow", sans-serif; --body: "Segoe UI Variable Text", "Segoe UI", sans-serif; --mono: "Cascadia Code", Consolas, monospace;
+  --r: 10px; --r-sm: 6px; --r-pill: 999px;
+  --bg-image: linear-gradient(transparent 62%, rgba(255, 60, 215, 0.16) 62.2%, transparent 63%),
+    repeating-linear-gradient(90deg, rgba(45, 226, 230, 0.07) 0 1px, transparent 1px 64px), linear-gradient(180deg, #11041f 0%, #2b0842 55%, #4a0d4e 78%, #ff6b3d 140%);
+  color-scheme: dark;
+}
+/* ── Bento Pop: cream, thick ink outlines, candy blocks ──────────────────────────────────────────── */
+[data-theme="bento"] {
+  --bg: #fcf5e8; --felt: #f7eedc; --card: #fff; --card-2: #fff7e6; --ink: #1c1b19; --ink-2: #34312c; --ink-3: #77705f; --rule: #1c1b19; --rule-2: #e6dcc7;
+  --dia: #ffc800; --club: #00c389; --heart: #ff5a5f; --spade: #3d7bff; --you: #ff6fc0; --focus: #3d7bff; --on-accent: #1c1b19;
+  --display: "Segoe UI Variable Display", "Segoe UI Black", "Segoe UI", sans-serif; --body: "Segoe UI Variable Text", "Segoe UI", sans-serif;
+  --mono: "Cascadia Mono", Consolas, monospace; --r: 18px; --r-sm: 12px; --r-pill: 999px;
+  --bg-image: radial-gradient(rgba(28, 27, 25, 0.12) 1.2px, transparent 1.4px); color-scheme: light;
+}
+/* ── Dragonbone: weathered stone, bone and amber, carved small caps ──────────────────────────────── */
+[data-theme="dragon"] {
+  --bg: #13110e; --felt: #18150f; --card: #1c1914; --card-2: #25211a; --ink: #ebe2cd; --ink-2: #c6bba2; --ink-3: #8b806a; --rule: #5e5341; --rule-2: #39332a;
+  --dia: #dca443; --club: #8fb67c; --heart: #c94a3b; --spade: #a3cfdb; --you: #c8b4e6; --focus: #dca443; --on-accent: #17120a;
+  --display: "Constantia", "Cambria", "Sitka Heading", Georgia, serif; --body: "Segoe UI Variable Text", "Segoe UI", sans-serif;
+  --mono: "Cascadia Mono", Consolas, monospace; --r: 3px; --r-sm: 2px; --r-pill: 3px;
+  --bg-image: radial-gradient(1000px 600px at 50% -20%, rgba(220, 164, 67, 0.09), transparent 65%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 .9 0 0 0 0 .85 0 0 0 0 .7 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  color-scheme: dark;
+}
+
+/* ================================================================== surfaces per family */
+/* soft: thin borders, depth instead of offset shadows, gentle lift on hover */
+[data-family="soft"] :is(.fs, .sess, .dl, .plan, .col, .meter, .card, .voice, .art, .glass, .pcard, .x-card, .x-panel) {
+  border-width: 1px; border-color: var(--rule-2); box-shadow: 0 1px 0 color-mix(in srgb, var(--ink) 5%, transparent), 0 12px 32px -18px color-mix(in srgb, #000 60%, transparent);
+}
+[data-family="soft"] .tilt:hover { translate: 0 -3px; box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent, var(--spade)) 55%, transparent), 0 18px 40px -16px color-mix(in srgb, var(--accent, var(--spade)) 45%, transparent); }
+[data-family="soft"] :is(.btn, .field, .addform input, .addform select, .search input, .chat-list .filter input, .rail-foot button) { border-width: 1px; border-color: var(--rule); }
+[data-family="soft"] .btn:hover { translate: 0 -1px; box-shadow: 0 6px 18px -8px color-mix(in srgb, var(--spade) 70%, transparent); }
+[data-family="soft"] .btn.primary { box-shadow: 0 8px 22px -10px color-mix(in srgb, var(--you) 80%, transparent); border-color: var(--ink); }
+[data-family="soft"] :is(.rail, .strip, .reader-head, .chat-list, .pot, .section-head, .drawer header, .brand, .drawer) { border-color: var(--rule-2); border-width: 1px; }
+[data-family="soft"] .rail { border-right-width: 1px; }
+[data-family="soft"] .nav { margin: 1px 10px; border-left: 0; padding: 10px 12px; }
+[data-family="soft"] .nav[aria-current="page"] { background: color-mix(in srgb, var(--spade) 16%, var(--card)); color: var(--ink); box-shadow: inset 3px 0 0 var(--spade); }
+[data-family="soft"] .nav[aria-current="page"] .count { color: var(--ink-2); }
+[data-family="soft"] .brand .logo { border-radius: 14px; box-shadow: 0 10px 24px -10px var(--spade); }
+[data-family="soft"] :is(.col h2, table.list th, .chat-list .group, .bubble th) { background: var(--card-2); color: var(--ink); }
+[data-family="soft"] .col h2 .num { color: var(--ink-2); }
+[data-family="soft"] .col h2 { border-radius: var(--r) var(--r) 0 0; }
+[data-family="soft"] .msg.you .bubble { box-shadow: 0 10px 28px -16px var(--you); border-width: 1px; }
+[data-family="soft"] .voice { box-shadow: 0 16px 36px -20px var(--spade); }
+[data-family="soft"] .drawer { box-shadow: -30px 0 60px -20px rgba(0, 0, 0, 0.45); }
+[data-family="soft"] .toast { box-shadow: 0 16px 40px -14px var(--you); }
+[data-family="soft"] .results { box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.5); border-width: 1px; }
+[data-family="soft"] .table { border-width: 1px; border-color: var(--rule-2); }
+[data-family="soft"] .pcard { box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.55); }
+[data-family="soft"] .fs .bar, [data-family="soft"] .fs .side { border-color: var(--rule-2); }
+[data-family="soft"] .fs[data-s="running"] .bar { border-radius: var(--r) 0 0 var(--r); }
+[data-family="soft"] .readout { border-color: var(--rule-2); }
+[data-family="soft"] .prog { border: 0; }
+
+/* flat (Swiss): print-like, no glows, rules instead of boxes */
+[data-family="flat"] * { text-shadow: none !important; }
+[data-family="flat"] :is(.fs, .sess, .dl, .plan, .col, .meter, .card, .voice, .art, .pcard, .x-card, .x-panel) { border-width: 1px; border-color: var(--rule-2); box-shadow: none; }
+[data-family="flat"] .tilt:hover { translate: none; transform: none; box-shadow: inset 0 0 0 1px var(--ink); }
+[data-family="flat"] :is(.chip.run, .nav .count.hot, .fs[data-s="running"], .readout.run .v, .prog > i, .hbar > i, .pulse) { box-shadow: none; }
+[data-family="flat"] .btn, [data-family="flat"] .field { border-width: 1px; }
+[data-family="flat"] .btn:hover { translate: none; box-shadow: none; background: var(--ink); color: var(--bg); }
+[data-family="flat"] .btn.primary { box-shadow: none; background: var(--spade); border-color: var(--spade); color: #fff; }
+[data-family="flat"] :is(.rail, .strip, .reader-head, .chat-list, .pot, .section-head, .drawer, .drawer header, .brand) { border-width: 1px; }
+[data-family="flat"] h1 { font-weight: 700; letter-spacing: -0.03em; font-stretch: 100%; }
+[data-family="flat"] .brand .logo { box-shadow: none; background: var(--heart); border-color: var(--heart); color: #fff; }
+[data-family="flat"] .prog > i { background: var(--dia); animation: none; }
+[data-family="flat"] .voice, [data-family="flat"] .msg.you .bubble, [data-family="flat"] .toast, [data-family="flat"] .results { box-shadow: none; }
+
+/* ================================================================== per-theme signatures */
+[data-theme="obsidian"] h1, [data-theme="obsidian"] h2 { font-weight: 600; letter-spacing: 0.01em; }
+[data-theme="obsidian"] h1 { background: linear-gradient(180deg, #fff3cf, #c9a24c 85%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+[data-theme="obsidian"] .brand .logo { background: linear-gradient(145deg, #f3dc94, #b8913a); color: #1a1408; border-color: #e7c46b; }
+[data-theme="obsidian"] :is(.fs, .sess, .card, .meter, .x-card) { background-image: linear-gradient(160deg, rgba(231, 196, 107, 0.05), transparent 40%); }
+
+[data-theme="phosphor"] h1, [data-theme="phosphor"] .readout .v, [data-theme="phosphor"] .brand b { text-shadow: 0 0 10px currentColor; }
+[data-theme="phosphor"] h1::before { content: "> "; color: var(--ink-3); }
+[data-theme="phosphor"] .brand .logo { background: transparent; color: var(--club); border-color: var(--club); box-shadow: 0 0 14px var(--club); }
+
+[data-theme="sakura"] h1, [data-theme="sakura"] h2 { font-weight: 800; letter-spacing: -0.01em; font-stretch: 100%; }
+[data-theme="sakura"] body, body[data-theme="sakura"] { background-size: 26px 26px, 26px 26px; background-position: 0 0, 13px 13px; }
+[data-theme="sakura"] :is(.fs, .sess, .card, .meter, .dl, .plan, .x-card, .x-panel) { border: 2px solid var(--rule-2); box-shadow: 0 5px 0 var(--rule); }
+[data-theme="sakura"] .tilt:hover { translate: 0 -4px; box-shadow: 0 9px 0 color-mix(in srgb, var(--accent, var(--you)) 45%, var(--rule)); }
+[data-theme="sakura"] .brand .logo { background: linear-gradient(145deg, #ff9cc8, #b8a6ff); border: 0; color: #fff; box-shadow: 0 5px 0 #f2bfd0; }
+[data-theme="sakura"] .brand small::after { content: " ✿"; color: var(--you); }
+[data-theme="sakura"] .btn { border-width: 2px; border-color: var(--rule); box-shadow: 0 3px 0 var(--rule); }
+[data-theme="sakura"] .btn.primary { background: var(--you); border-color: var(--you); color: #fff; box-shadow: 0 4px 0 #d94f8e; }
+
+[data-theme="rose"] h1, [data-theme="rose"] h2 { font-style: italic; font-weight: 500; letter-spacing: 0; font-stretch: 100%; }
+[data-theme="rose"] h1 { font-size: 56px; }
+[data-theme="rose"] .brand .logo { background: linear-gradient(145deg, #f4d6cf, #c99aae); color: #3a282e; border: 0; }
+[data-theme="rose"] .btn.primary { background: linear-gradient(135deg, #b8577a, #946182); border: 0; color: #fff; }
+[data-theme="rose"] .section-head { border-bottom-style: solid; border-image: linear-gradient(90deg, var(--you), transparent) 1; }
+
+[data-theme="frost"] h1 { font-weight: 650; letter-spacing: -0.02em; font-stretch: 100%; }
+[data-theme="frost"] .brand .logo { background: linear-gradient(145deg, #8cc8dc, #b99be0); border: 0; color: #0b1219; }
+
+[data-theme="synth"] h1 { font-style: italic; background: linear-gradient(180deg, #ffd319 10%, #ff3cd7 60%, #7b2fff); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 14px rgba(255, 60, 215, 0.55)); }
+[data-theme="synth"] :is(.fs, .sess, .card, .meter, .x-card, .x-panel) { backdrop-filter: blur(6px); border-color: color-mix(in srgb, var(--you) 45%, transparent); }
+[data-theme="synth"] .brand .logo { background: linear-gradient(180deg, #ffd319, #ff3cd7); color: #14031f; border: 0; box-shadow: 0 0 22px #ff3cd7; }
+
+[data-theme="bento"] :is(.fs, .sess, .card, .meter, .dl, .plan, .col, .x-card, .x-panel, .pcard, .table) { border: 3px solid var(--ink); box-shadow: 5px 5px 0 var(--ink); }
+[data-theme="bento"] .tilt:hover { translate: -2px -2px; box-shadow: 8px 8px 0 var(--ink); }
+[data-theme="bento"] .btn { border: 2.5px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); font-weight: 800; }
+[data-theme="bento"] .btn.primary { background: var(--dia); color: var(--ink); }
+[data-theme="bento"] h1 { font-weight: 900; letter-spacing: -0.04em; font-stretch: 100%; }
+[data-theme="bento"] .brand .logo { background: var(--you); color: var(--ink); border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); border-radius: 14px; }
+[data-theme="bento"] .meter#m-gpu { background: #fff4c2; } [data-theme="bento"] .meter#m-vram { background: #ffe0f1; } [data-theme="bento"] .meter#m-ram { background: #d6f7ea; }
+
+[data-theme="dragon"] :is(h1, h2, .brand b, .nav, .btn, .chip, .section-head a) { font-variant: small-caps; letter-spacing: 0.08em; font-stretch: 100%; }
+[data-theme="dragon"] h1 { font-weight: 600; text-shadow: 0 2px 0 #000, 0 0 24px rgba(220, 164, 67, 0.25); }
+[data-theme="dragon"] :is(.fs, .sess, .card, .meter, .dl, .plan, .x-card, .x-panel) { border: 3px double var(--rule); box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.35); }
+[data-theme="dragon"] .tilt:hover { box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.35), 0 0 22px color-mix(in srgb, var(--accent, var(--dia)) 35%, transparent); translate: 0 -2px; }
+[data-theme="dragon"] .brand .logo { background: radial-gradient(circle at 50% 35%, #3a3326, #14110c); color: var(--dia); border: 2px solid var(--dia); box-shadow: 0 0 18px rgba(220, 164, 67, 0.4); }
