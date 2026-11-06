@@ -1,5 +1,32 @@
 # Changelog
 
+## 4.1.0: Trash, per-agent costs, and a playbook for long jobs
+
+Built from three measured head-to-head runs (the same task done by one agent with Anchor and one without).
+
+- **Trash.** A new page for the files your sessions leave behind: temp bundles, build caches, scratch databases,
+  logs. Claude adds them with `anchor trash add <path> --why "…"` instead of ending its report with a "please delete"
+  list; you delete each one, or all at once, in one click. Deleting moves to the Recycle Bin (or the system trash),
+  so it can be undone. **Keep** takes an item off the list and leaves the file alone, **Show** opens its folder. The
+  menu shows how many are waiting. Paths that look like a drive, your home folder, a top-level home folder, a git
+  repository or Claude/Anchor settings are never accepted, and are checked again at delete time. Only you empty the
+  Trash: the command refuses inside a Claude session. Also `anchor trash`, `anchor trash keep <id>`,
+  `anchor trash rm <id>`, `anchor trash empty [--permanent]`.
+- **Guard hands blocked deletes to the Trash.** When Guard blocks Claude from deleting a file (a `.bin` temp bundle
+  that looked like a model, say), the path goes to the Trash with the reason, and Claude is told to point you
+  there, so a false alarm costs one click instead of a hunt through Downloads.
+- **`anchor runs`: what each subagent cost.** Every subagent of a session, measured the same way from its own
+  transcript: weighted tokens, replies, tool calls, output, cache written and read, peak context, the share of cost
+  spent re-reading a context over 150k, images, working minutes with stalls removed, model, most used tools. A run
+  that crashed and was resumed counts as one agent. Made for comparing two approaches to the same job.
+- **Token saver: long agent jobs.** The measurements showed that past ~150k tokens of context, re-reading it is half
+  to two thirds of an agent's whole cost. The token-saver skill now says how to avoid it: split long jobs into
+  phases that start fresh and hand off through files, write notes as you go so a resume is cheap, checkpoint on the
+  board, tile screenshots into contact sheets or hand the review to a smaller model, read web pages with a script
+  that returns only the fields needed, run one browser agent at a time, scroll slowly in screenshot scripts.
+  The session note gained one line about phases and the Trash.
+- **Fix:** `anchor open --page <name>` dropped every letter but "w" from the page name.
+
 ## 4.0.0: Axios is now Anchor
 
 - **New mark.** The star-and-anchor logo, painted in each theme's ink (gold on Obsidian, gradients on Synth, Sakura

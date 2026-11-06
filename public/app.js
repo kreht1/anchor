@@ -848,6 +848,7 @@ async function poll() {
   polling = true;
   try {
     O = await api('/api/overview');
+    { const b = document.querySelector('[data-nav="trash"] .x-badge'); if (b) { b.textContent = O.trash || ''; b.hidden = !O.trash; } }
     notifyChanges();
     renderStrip();
     const running = O.tasks.filter(t => t.status === 'running').length;

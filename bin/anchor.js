@@ -36,6 +36,10 @@ const HELP = `Anchor: a dashboard for every Claude Code session on this computer
   anchor claude <profile> [claude options]
                            start Claude Code on a provider profile (OpenRouter, Ollama, Groq...) set up in Anchor
   anchor providers             list provider profiles
+  anchor runs [--session id] [--json]
+                           what each subagent of a session cost, measured the same way (compare two approaches)
+  anchor trash [add <path...> --why "text" | keep <id> | rm <id> | empty [--permanent]]
+                           leftovers to delete afterwards; emptying moves them to the Recycle Bin
   anchor status                is it running? where is the data?
   anchor stop                  stop the background server
 
@@ -69,9 +73,10 @@ function args(argv) {
     else if (a === '--gb') out.gb = Number(argv[++i]);
     else if (a === '--days') out.days = Number(argv[++i]);
     else if (a === '--session') out.session = argv[++i];
+    else if (a === '--why') out.why = argv[++i];
     else if (a === '--pid') out.pid = Number(argv[++i]);
     else if (a === '--progress') out.progress = argv[++i];
-    else if (a === '--page') out.page = String(argv[++i] || '').replace(/[^w-]/g, '');
+    else if (a === '--page') out.page = String(argv[++i] || '').replace(/[^\w-]/g, '');
     else if (a.startsWith('--')) out[a.slice(2)] = true;
     else out._.push(a);
   }
@@ -155,7 +160,7 @@ async function hook() {
 
 // The token saver (on unless turned off in Anchor): a few working habits that cut input tokens without hurting results,
 // stricter skill hints, and a shorter session note. About 120 tokens, which it pays back many times over.
-const LEAN_RULE = 'TOKEN SAVER (set in Anchor): search before reading and read only the lines you need; cap command output (tail, head, quiet flags); batch independent tool calls; never re-read a file you just edited or wrote; PDFs a few pages at a time; wide multi-file searches go to an Explore subagent, mechanical subagent work to a smaller model; load a skill only when it clearly fits the real task, and once per session; keep answers short. When a session gets long, suggest /compact at a milestone, and /clear for a new topic. The token-saver skill has the details.';
+const LEAN_RULE = 'TOKEN SAVER (set in Anchor): search before reading and read only the lines you need; cap command output (tail, head, quiet flags); batch independent tool calls; never re-read a file you just edited or wrote; PDFs a few pages at a time; wide multi-file searches go to an Explore subagent, mechanical subagent work to a smaller model; load a skill only when it clearly fits the real task, and once per session; keep answers short. When a session gets long, suggest /compact at a milestone, and /clear for a new topic. Long agent jobs: split into fresh phases that hand off through files. Leftover files for the user to delete: anchor trash add <path> --why "...". The token-saver skill has the details.';
 function tokenSaverOn() { return require('../lib/kv').read('settings.json', {}).tokenSaver !== false; }
 
 // Skill discipline (on unless turned off in Anchor): the superpowers-style rule that makes every session look for and
@@ -301,6 +306,7 @@ function uninstall() {
         const r = G.evaluate(input);
         if (r.decision === 'allow') break;
         G.log(input, r);
+        if (r.decision === 'deny' && r.targets && r.targets.length) { try { const TR = require('../lib/trash'); for (const p of r.targets) TR.add(p, { from: 'guard', why: `Claude tried to delete it; Guard ${r.decision === 'deny' ? 'blocked' : 'asked about'} it (${r.why}).`, cwd: input.cwd, session: input.session_id }); } catch { /* never break the hook */ } }
         process.stdout.write(JSON.stringify({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: r.decision, permissionDecisionReason: G.reason(r) } }));
         break;
       }
@@ -362,6 +368,32 @@ function uninstall() {
         const TK = require('../lib/tokens');
         const r = TK.audit({ days: a.days || 7 });
         console.log(a.json ? JSON.stringify(r, null, 1) : TK.text(r));
+        break;
+      }
+      case 'runs': {
+        const RN = require('../lib/runs');
+        const r = RN.report({ session: a.session || a._[0] });
+        console.log(a.json ? JSON.stringify(r, null, 1) : RN.text(r));
+        break;
+      }
+      case 'trash': {
+        const TR = require('../lib/trash');
+        const [sub, ...rest] = a._;
+        if (sub === 'add') {
+          if (!rest.length) { console.log('usage: anchor trash add <path...> --why "what it is"'); break; }
+          for (const p of rest) { const r = TR.add(p, { why: a.why, from: process.env.CLAUDECODE ? 'claude' : 'you', cwd: process.cwd(), project: a.project }); console.log(r.ok ? `in Trash: ${r.item.path} (${TR.fmtSize(r.item.size)})` : `${r.path}: ${r.error}`); }
+        } else if (sub === 'rm' || sub === 'empty' || sub === 'delete') {
+          if (process.env.CLAUDECODE) { console.log('Only the user empties the Trash. Tell them: Anchor → Trash, or run "anchor trash empty" in a terminal.'); process.exitCode = 1; break; }
+          const r = TR.empty(sub === 'empty' ? [] : rest, { permanent: !!a.permanent });
+          console.log(`deleted ${r.deleted}${a.permanent ? ' permanently' : ' (moved to the Recycle Bin)'}`); for (const f of r.failed) console.log(`  kept ${f.path}: ${f.error}`);
+        } else if (sub === 'keep') console.log(`taken off the list: ${TR.keep(rest).kept}`);
+        else {
+          const items = TR.list();
+          if (a.json) { console.log(JSON.stringify(items, null, 1)); break; }
+          if (!items.length) { console.log('Trash is empty.'); break; }
+          console.log(`Trash: ${items.length} item(s), ${TR.fmtSize(items.reduce((n, i) => n + i.size, 0))}. "anchor trash empty" moves them all to the Recycle Bin.`);
+          for (const i of items) console.log(`  ${i.id}  ${TR.fmtSize(i.size).padStart(8)}  ${i.path}${i.why ? `\n            ${i.why}` : ''}`);
+        }
         break;
       }
       case 'saver': {

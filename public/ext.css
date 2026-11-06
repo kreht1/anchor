@@ -458,3 +458,12 @@
 @media (max-width: 1100px) { .x-lrow { grid-template-columns: 52px minmax(160px, 1fr) 150px 48px 84px 92px; } .x-lc-w { display: none; } }
 @media (max-width: 760px) { .x-lrow { grid-template-columns: 48px 1fr 44px; } .x-lc-strip, .x-lc-last, .x-lrow > :last-child { display: none; } .x-sk-sort { margin-left: 0; } }
 @media (prefers-reduced-motion: reduce) { .x-match > summary::before { transition: none; } }
+
+/* Trash */
+.x-trash-hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: center; margin-bottom: 18px; }
+.x-trash-row { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; cursor: default; }
+.x-trash-main { display: grid; gap: 3px; min-width: 0; }
+.x-trash-main b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.btn.danger, .btn.primary.danger { background: var(--heart); color: #fff; box-shadow: none; }
+.x-badge { margin-left: auto; min-width: 18px; padding: 0 6px; border-radius: 9px; background: var(--heart); color: #fff; font-size: 11px; line-height: 18px; text-align: center; }
+@media (max-width: 720px) { .x-trash-hero, .x-trash-row { grid-template-columns: 1fr; } }

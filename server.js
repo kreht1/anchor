@@ -26,6 +26,7 @@ const STUDIO = require('./lib/studio');
 const CCR = require('./lib/ccr');
 const INST = require('./lib/installs');
 const GUARD = require('./lib/guard');
+const TRASH = require('./lib/trash');
 const MODELS = require('./lib/models');
 const tokenAudit = require('./lib/tokens-worker'); // the token audit, off the main thread
 
@@ -90,7 +91,7 @@ async function api(req, res, url) {
     const jobs = J.list();
     o.tasks = [...jobs.filter(j => j.status === 'running'), ...o.tasks.filter(t => t.status === 'running'),
       ...jobs.filter(j => j.status !== 'running'), ...o.tasks.filter(t => t.status !== 'running')];
-    return send(res, 200, { ...o, board: store.getItems(), system: S.get(), version: VERSION, now: new Date().toISOString() });
+    return send(res, 200, { ...o, board: store.getItems(), system: S.get(), trash: TRASH.count(), version: VERSION, now: new Date().toISOString() });
   }
   if (m === 'GET' && parts[0] === 'system') { S.want(); return send(res, 200, S.get()); }
   if (m === 'GET' && parts[0] === 'session' && parts[1]) {
@@ -118,6 +119,7 @@ async function api(req, res, url) {
   if (m === 'GET' && parts[0] === 'bridge-events') return send(res, 200, BR.events());
   if (m === 'GET' && parts[0] === 'models' && parts[1] === 'scan') return send(res, 200, MODELS.scan());
   if (m === 'GET' && parts[0] === 'models' && parts[1] === 'inspect') return send(res, 200, await MODELS.inspect(q.get('path')));
+  if (m === 'GET' && parts[0] === 'trash') return send(res, 200, TRASH.list());
   if (m === 'GET' && parts[0] === 'guard') return send(res, 200, { settings: GUARD.settings(), rules: GUARD.RULES, recent: GUARD.recent(300) });
   if (m === 'GET' && parts[0] === 'ccr') return send(res, 200, await CCR.status());
   if (m === 'GET' && parts[0] === 'installs') return send(res, 200, INST.catalog());
@@ -185,6 +187,17 @@ async function api(req, res, url) {
   if (m === 'POST' && parts[0] === 'models' && parts[1] === 'samples') return send(res, 200, await MODELS.samples(body.path, body.names, body.cap));
   if (m === 'POST' && parts[0] === 'guard' && parts[1] === 'test') return send(res, 200, GUARD.evaluate({ tool_name: body.tool || 'Bash', tool_input: body.tool_input || { command: String(body.command || '') }, cwd: body.cwd }));
   if (m === 'POST' && parts[0] === 'guard' && !parts[1]) return send(res, 200, GUARD.saveSettings(body));
+  if (m === 'POST' && parts[0] === 'trash' && parts[1] === 'add') return send(res, 200, TRASH.add(String(body.path || ''), { from: 'you', why: body.why }));
+  if (m === 'POST' && parts[0] === 'trash' && parts[1] === 'keep') return send(res, 200, TRASH.keep((body.ids || []).map(String)));
+  if (m === 'POST' && parts[0] === 'trash' && parts[1] === 'empty') return send(res, 200, TRASH.empty((body.ids || []).map(String), { permanent: body.permanent === true }));
+  if (m === 'POST' && parts[0] === 'trash' && parts[1] === 'show') {
+    const it = TRASH.list().find(i => i.id === String(body.id || ''));
+    if (!it) return send(res, 404, { error: 'not in the Trash' });
+    const { spawn } = require('child_process');
+    const [cmd, args] = process.platform === 'win32' ? ['explorer.exe', [`/select,${it.path}`]] : process.platform === 'darwin' ? ['open', ['-R', it.path]] : ['xdg-open', [require('path').dirname(it.path)]];
+    try { spawn(cmd, args, { detached: true, stdio: 'ignore' }).unref(); } catch { /* no file manager */ }
+    return send(res, 200, { ok: true });
+  }
   if (m === 'POST' && parts[0] === 'studio' && !parts[1]) return send(res, 201, STUDIO.create(body));
   if (m === 'POST' && parts[0] === 'studio' && parts[2] === 'revise') return send(res, 201, STUDIO.revise(parts[1], body.text, { model: body.model }));
   if (m === 'POST' && parts[0] === 'studio' && parts[2] === 'open') return send(res, 200, STUDIO.openFile(parts[1], body.rel));
