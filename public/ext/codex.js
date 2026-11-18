@@ -133,7 +133,7 @@ views.codex = {
           <span class="sub">${esc(String(x.description || '').slice(0, 160))}</span>
           <span class="sub"><span class="chip ${v.cls}">${v.label}</span> ${esc(x.why)}${x.ported ? ` · in Codex as <code>$${esc(x.ported.name)}</code>${x.ported.stale ? ' · <b>source changed</b>' : ''}` : ''}</span></div>
         <div class="tools">${act}</div></div>`;
-    }).join('') : '<div class="empty">No skills match.</div>');
+    }).join('') : `<div class="empty">${d.bridge.length ? 'No skills match.' : 'No Claude skills on this computer. Use Find skills below to install skills straight into Codex.'}</div>`);
     $('#cx-send').disabled = !$('#cx-list').querySelector('input[data-pick]:checked');
     setHTML($('#cx-sessions'), u.recent.length ? u.recent.map(r => `<div class="x-row"><div class="x-trash-main"><b>${esc(r.project || 'Codex session')}</b>
         <span class="sub">${esc((r.firstPrompt || '').replace(/\s+/g, ' ').slice(0, 140) || 'No prompt yet')}</span>

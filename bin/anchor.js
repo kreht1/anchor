@@ -217,11 +217,12 @@ function codexSkillRule(lean) {
 }
 
 async function codexHook() {
+  // the launcher first: it also creates the data folder, which a first-ever run (no Claude Code) does not have yet
+  try { writeLauncher(); } catch { /* read-only home */ }
   let up = !!(await ping(300));
   if (!up) {
-    try { const fd = fs.openSync(LOG, 'a'); spawn(process.execPath, [path.join(ROOT, 'server.js')], { detached: true, stdio: ['ignore', fd, fd], windowsHide: true, cwd: ROOT }).unref(); up = true; } catch { /* leave it */ }
+    try { fs.mkdirSync(P.DATA, { recursive: true }); const fd = fs.openSync(LOG, 'a'); spawn(process.execPath, [path.join(ROOT, 'server.js')], { detached: true, stdio: ['ignore', fd, fd], windowsHide: true, cwd: ROOT }).unref(); up = true; } catch { /* leave it */ }
   }
-  try { writeLauncher(); } catch { /* read-only home */ }
   const mc = 'node "$HOME/.anchor/anchor.js"';
   const lean = tokenSaverOn();
   let ctx = up ? `Anchor (local dashboard ${URL_}): anchor = ${mc}. Board: anchor add "title" -p <project> [--doing], anchor done <id>, anchor list. Usage and resets: anchor codex usage. Run these with your shell; don't announce the bookkeeping.` : '';
@@ -247,7 +248,7 @@ function codexRun(args) {
 }
 
 // where Codex should get Anchor from: this folder when it is a development checkout, else the public repository
-function codexSource() { return /[\\/]\.claude[\\/]plugins[\\/]/.test(ROOT) ? 'kreht1/anchor' : ROOT; }
+function codexSource() { return /[\\/]\.(claude|codex)[\\/]plugins[\\/]|[\\/]codex[^\\/]*[\\/]plugins[\\/]cache[\\/]/i.test(ROOT) ? 'kreht1/anchor' : ROOT; }
 
 function claudeSkillList() { return require('../lib/skills').list(true).skills; }
 
