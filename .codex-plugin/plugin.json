@@ -1,6 +1,6 @@
 {
   "name": "anchor",
-  "version": "4.2.0",
+  "version": "4.2.1",
   "description": "Anchor for Codex: the same local token governor and dashboard as in Claude Code (token saver, context and /compact prompts, Guard against destructive commands, skill hints, board, usage and limit resets), plus a skill bridge that brings Claude skills to Codex. Runs only on 127.0.0.1; no data leaves your computer.",
   "author": { "name": "Ahmed GHALMI" },
   "homepage": "https://github.com/kreht1/anchor",

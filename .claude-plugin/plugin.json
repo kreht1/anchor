@@ -1,6 +1,6 @@
 {
   "name": "anchor",
-  "version": "4.2.0",
+  "version": "4.2.1",
   "description": "Anchor: a local token governor and dashboard for Claude Code and Codex: stops a big session from re-paying an expired cache, prompts /compact and /clear as context grows, a status line with context and cache time, lean start, token tools from the web ranked for your usage, token skills for the Claude app and Cowork; plus a skill bridge that brings Claude skills to Codex, live agents, sessions, skills manager and usage resets. Runs only on 127.0.0.1; no data leaves your computer.",
   "license": "MIT",
   "keywords": [

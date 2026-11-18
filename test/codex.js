@@ -39,6 +39,17 @@ const u = CX.usage(7);
 assert.strictEqual(u.sessions, 1); assert.strictEqual(u.cacheShare, 67);
 assert.strictEqual(u.limits.primary.pct, 42); assert.strictEqual(u.limits.secondary.pct, 12);
 assert.ok(Math.abs(Date.parse(u.limits.primary.resetAt) - (t0 + 4 + 3600000)) < 2000, 'reset from resets_in_seconds');
+assert.strictEqual(u.limits.primary.label, '5-hour window'); assert.strictEqual(u.limits.secondary.label, 'Week');
+assert.strictEqual(s.fresh, 30000 + 4000, 'new tokens = input not from cache + output');
+assert.strictEqual(CX.limitWindow({ used_percent: 3, window_minutes: 43200 }).label, '30-day window', 'free plan window');
+// `codex exec` logs the prompt only as a response item
+const ex = path.join(day, 'rollout-2026-11-18T11-00-00-0199a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a5c.jsonl');
+fs.writeFileSync(ex, [ev(0, 'session_meta', { id: 'ex1', cwd: 'C:/work/x' }),
+  ev(1, 'response_item', { type: 'message', role: 'user', content: [{ type: 'input_text', text: '# AGENTS.md instructions for C:/work/x' }] }),
+  ev(2, 'response_item', { type: 'message', role: 'user', content: [{ type: 'input_text', text: 'fix the flaky login test' }] })].join('\n') + '\n');
+assert.strictEqual(CX.summarize(ex).firstPrompt, 'fix the flaky login test'); assert.strictEqual(CX.summarize(ex).prompts, 1);
+assert.deepStrictEqual(CX.sessionState(ex).prompts, ['fix the flaky login test']);
+fs.unlinkSync(ex);
 assert.ok(CX.isCodex(undefined, { transcript_path: file }) && CX.isCodex('codex', {}) && !CX.isCodex(undefined, { transcript_path: 'C:/x/.claude/projects/a/b.jsonl' }));
 
 // ---- governor in Codex mode: tier note with /new, never a cache-cold block

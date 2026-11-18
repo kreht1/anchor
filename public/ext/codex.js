@@ -111,8 +111,9 @@ views.codex = {
     $('#cx-setup').textContent = ready ? 'Update Codex setup' : 'Set up Codex';
     $('#cx-setup').disabled = !s.installed;
     const p = u.limits && u.limits.primary, w = u.limits && u.limits.secondary;
-    setHTML($('#cx-kpis'), [[fmtK(u.tokens), `tokens · ${u.days} days`], [p && p.pct != null ? `${p.pct}%` : '–', `short window${p && p.resetAt ? ` · resets ${ago(p.resetAt).replace(' ago', '')}` : ''}`],
-      [w && w.pct != null ? `${w.pct}%` : '–', 'week'], [d.ported.length, 'skills ported']]
+    const resets = x => x && x.resetAt ? ` · resets ${new Date(x.resetAt).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })}` : '';
+    setHTML($('#cx-kpis'), [[fmtK(u.fresh), `new tokens · ${u.days} days`], [p && p.pct != null ? `${p.pct}%` : '–', `${p ? p.label.toLowerCase() : 'limit'}${resets(p)}`],
+      ...(w ? [[w.pct != null ? `${w.pct}%` : '–', `${w.label.toLowerCase()}${resets(w)}`]] : []), [d.ported.length, 'skills ported']]
       .map(([v, k]) => `<div><b class="num">${v}</b><span>${k}</span></div>`).join(''));
     // the bridge list
     const q = ($('#cx-q').value || '').toLowerCase();
@@ -137,7 +138,7 @@ views.codex = {
     $('#cx-send').disabled = !$('#cx-list').querySelector('input[data-pick]:checked');
     setHTML($('#cx-sessions'), u.recent.length ? u.recent.map(r => `<div class="x-row"><div class="x-trash-main"><b>${esc(r.project || 'Codex session')}</b>
         <span class="sub">${esc((r.firstPrompt || '').replace(/\s+/g, ' ').slice(0, 140) || 'No prompt yet')}</span>
-        <span class="sub">${fmtK(r.total)} tokens · context ${fmtK(r.context)}${r.window ? ` of ${fmtK(r.window)}` : ''} · ${r.model ? esc(r.model) + ' · ' : ''}${esc(ago(r.last))}</span></div></div>`).join('')
+        <span class="sub">${fmtK(r.fresh)} new tokens · context ${fmtK(r.context)}${r.window ? ` of ${fmtK(r.window)}` : ''} · ${r.model ? esc(r.model) + ' · ' : ''}${esc(ago(r.last))}</span></div></div>`).join('')
       : '<div class="empty">No Codex sessions in the last week yet.</div>');
   },
 };

@@ -1,5 +1,14 @@
 # Changelog
 
+## 4.2.1: Codex, checked in real sessions
+
+- Verified live in Codex 0.169.1: the session note and token saver arrive at start, skill hints arrive with each message,
+  Guard blocks a `.git` delete (and Codex does not try another way), and a risky command gets Guard's warning.
+- Usage counts new tokens the way Codex does (cache reads shown apart), and names each limit window by its length
+  (the free plan has one 30-day window; Plus and Pro have a 5-hour window and a week).
+- Sessions run with `codex exec` now show their prompt, and the governor's topic switch sees it.
+- A first-ever run on a computer without Claude Code starts the dashboard.
+
 ## 4.2.0: Anchor in Codex, and a skill bridge
 
 - **Codex support.** Codex installs Anchor from the same marketplace (`codex plugin marketplace add kreht1/anchor`,

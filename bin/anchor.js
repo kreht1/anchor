@@ -348,9 +348,9 @@ async function codex(a) {
       if (!u.sessions) { console.log('No Codex sessions in the last 7 days.'); break; }
       const when = iso => new Date(iso).toLocaleString(undefined, { weekday: 'short', hour: '2-digit', minute: '2-digit' });
       const lim = (n, w) => w ? `${n}: ${w.pct != null ? `${w.pct}% used` : 'unknown'}${w.resetAt ? `, resets ${when(w.resetAt)}` : ''}` : null;
-      console.log(`Codex · last ${u.days} days: ${fmtTok(u.tokens)} tokens in ${u.sessions} session${u.sessions > 1 ? 's' : ''} (${u.cacheShare}% of input from cache) · last 5 h: ${fmtTok(u.last5h)}`);
-      if (u.limits) console.log([lim(`Short window${u.limits.primary && u.limits.primary.minutes ? ` (${Math.round(u.limits.primary.minutes / 60)} h)` : ''}`, u.limits.primary), lim('Week', u.limits.secondary)].filter(Boolean).join(' · ') + `  (as Codex reported ${when(u.limits.at)})`);
-      for (const s of u.recent.slice(0, 5)) console.log(`  ${s.project || '?'}  ${fmtTok(s.total)} tokens, context ${fmtTok(s.context)}${s.window ? `/${fmtTok(s.window)}` : ''}  ${s.firstPrompt ? `"${s.firstPrompt.slice(0, 60).replace(/\s+/g, ' ')}"` : ''}`);
+      console.log(`Codex · last ${u.days} days: ${fmtTok(u.fresh)} new tokens + ${fmtTok(u.cached)} cache reads in ${u.sessions} session${u.sessions > 1 ? 's' : ''} (${u.cacheShare}% of input from cache)`);
+      if (u.limits) console.log([u.limits.primary && lim(u.limits.primary.label, u.limits.primary), u.limits.secondary && lim(u.limits.secondary.label, u.limits.secondary)].filter(Boolean).join(' · ') + `  (as Codex reported ${when(u.limits.at)})`);
+      for (const s of u.recent.slice(0, 5)) console.log(`  ${s.project || '?'}  ${fmtTok(s.fresh)} new tokens, context ${fmtTok(s.context)}${s.window ? `/${fmtTok(s.window)}` : ''}  ${s.firstPrompt ? `"${s.firstPrompt.slice(0, 60).replace(/\s+/g, ' ')}"` : ''}`);
       break;
     }
     case 'uninstall': {
@@ -384,7 +384,7 @@ function usage() {
     const c = require('../lib/codex').usage(7);
     if (c.sessions) {
       const p = c.limits && c.limits.primary, w = c.limits && c.limits.secondary;
-      console.log(`Codex (7 days): ${fmtTok(c.tokens)} tokens in ${c.sessions} sessions${p && p.pct != null ? ` · short window ${p.pct}% used${p.resetAt ? `, resets ${when(p.resetAt)}` : ''}` : ''}${w && w.pct != null ? ` · week ${w.pct}%${w.resetAt ? `, resets ${when(w.resetAt)}` : ''}` : ''}. Details: anchor codex usage`);
+      console.log(`Codex (7 days): ${fmtTok(c.fresh)} new tokens in ${c.sessions} sessions${p && p.pct != null ? ` · ${p.label.toLowerCase()} ${p.pct}% used${p.resetAt ? `, resets ${when(p.resetAt)}` : ''}` : ''}${w && w.pct != null ? ` · ${w.label.toLowerCase()} ${w.pct}%${w.resetAt ? `, resets ${when(w.resetAt)}` : ''}` : ''}. Details: anchor codex usage`);
     }
   } catch { /* no Codex */ }
 }
