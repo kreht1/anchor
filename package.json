@@ -1,6 +1,6 @@
 {
   "name": "anchor",
-  "version": "4.2.1",
+  "version": "4.2.2",
   "description": "Anchor: a local token governor and dashboard for Claude Code and Codex. Live agents and diffs, projects, code, studies, skills, usage and limits. Runs only on your computer.",
   "private": true,
   "license": "MIT",

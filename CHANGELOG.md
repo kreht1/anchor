@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.2.2: Codex re-asks for hook approval after updates
+
+- Codex ties each hook approval to the plugin's code, so every Anchor update switches its hooks off until you approve
+  them again with `/hooks` (Codex shows `hook: SessionStart Failed`). The guide, `anchor codex status` and the Codex
+  page now say so.
+
 ## 4.2.1: Codex, checked in real sessions
 
 - Verified live in Codex 0.169.1: the session note and token saver arrive at start, skill hints arrive with each message,

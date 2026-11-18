@@ -263,7 +263,7 @@ async function codex(a) {
       console.log(`${tick(s.loggedIn)} signed in${s.loggedIn ? '' : ' (run: codex login)'}`);
       console.log(`${tick(s.marketplace)} Anchor marketplace${s.marketplaceSource ? `  ${s.marketplaceSource}` : ''}`);
       console.log(`${tick(s.pluginEnabled)} Anchor plugin${s.pluginVersions.length ? `  ${s.pluginVersions.join(', ')}` : ''}`);
-      console.log(`${tick(s.hooksFeature)} hooks feature${s.hooksFeature ? ' (approve Anchor\'s hooks once with /hooks inside Codex)' : ' is off in config.toml'}`);
+      console.log(`${tick(s.hooksFeature && s.hooksApproved)} hooks${!s.hooksFeature ? ' are off in config.toml' : s.hooksApproved ? ' approved (after each Anchor update, approve them again with /hooks)' : ': approve them with /hooks inside Codex'}`);
       console.log(`${tick(s.agentsNote)} note in ${CX.PATHS.AGENTS_MD}`);
       const p = SP.ported();
       console.log(`${tick(p.length)} ${p.length} Claude skill${p.length === 1 ? '' : 's'} ported to ${SP.DEST}`);
@@ -304,7 +304,7 @@ async function codex(a) {
         console.log(done.length ? `✓ ported your proven skills  ${done.join(' ')}` : '✓ skills: nothing new to port (see: anchor codex skills)');
       }
       require('../lib/kv').write('codex-skills-snapshot.json', {});
-      console.log('\nLast step, inside Codex: run /hooks once and approve Anchor\'s hooks (Codex asks before running any plugin hook).');
+      console.log('\nLast step, inside Codex: run /hooks and approve Anchor\'s three hooks. Codex asks again after every Anchor update.');
       if (!s.loggedIn) console.log('Codex is not signed in yet: codex login');
       break;
     }

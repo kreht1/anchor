@@ -103,7 +103,7 @@ views.codex = {
       step(s.installed, s.installed ? `Codex ${esc(s.version)}` : 'Codex is not installed', '<code>npm i -g @openai/codex</code>'),
       step(s.loggedIn, 'Signed in', '<code>codex login</code> in a terminal'),
       step(s.pluginEnabled, 'Anchor plugin in Codex: hooks, skills', 'Set up Codex below'),
-      step(s.hooksFeature, 'Hooks on. Approve Anchor\'s hooks once with <code>/hooks</code> inside Codex'),
+      step(s.hooksFeature && s.hooksApproved, s.hooksApproved ? 'Hooks approved. After each Anchor update, approve them again with <code>/hooks</code>' : 'Approve Anchor\'s hooks with <code>/hooks</code> inside Codex'),
       step(s.agentsNote, 'Board note in ~/.codex/AGENTS.md', 'Set up Codex below'),
     ].join(''));
     const ready = s.installed && s.pluginEnabled && s.agentsNote;

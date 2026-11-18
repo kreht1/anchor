@@ -77,14 +77,21 @@ Then start a new session (`/new`). Done.
 ## Updating and removing
 
 ```
-codex plugin marketplace upgrade anchor && codex plugin add anchor@anchor   # update
+codex plugin marketplace upgrade anchor
+codex plugin add anchor@anchor                                              # update
 codex plugin remove anchor@anchor && codex plugin marketplace remove anchor # remove
 ```
+
+**After every update, open Codex and approve Anchor's hooks again with `/hooks`.** Codex ties each approval to the
+plugin's exact code, so an update switches the hooks off (you'll see `hook: SessionStart Failed`) until you
+re-approve them. Until then, Guard and the token saver are off.
 
 Skills Anchor installed stay in `~/.agents/skills`; delete their folders to remove them. Anchor's data is in `~/.anchor`.
 
 ## If something doesn't work
 
+- **`hook: SessionStart Failed` (or no Anchor note) after an update:** that's Codex waiting for you to re-approve the
+  changed hooks. Run `/hooks`, approve the three Anchor hooks, then `/new`.
 - **No Anchor note at the start of a session:** run `/hooks` and check that the three Anchor hooks are approved, then
   `/new`.
 - **The dashboard doesn't open:** run `node ~/.anchor/anchor.js start`. If that file doesn't exist yet, open one Codex
