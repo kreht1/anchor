@@ -1,0 +1,18 @@
+{
+  "name": "anchor",
+  "version": "4.2.0",
+  "description": "Anchor for Codex: the same local token governor and dashboard as in Claude Code (token saver, context and /compact prompts, Guard against destructive commands, skill hints, board, usage and limit resets), plus a skill bridge that brings Claude skills to Codex. Runs only on 127.0.0.1; no data leaves your computer.",
+  "author": { "name": "Ahmed GHALMI" },
+  "homepage": "https://github.com/kreht1/anchor",
+  "repository": "https://github.com/kreht1/anchor",
+  "license": "MIT",
+  "keywords": ["dashboard", "tokens", "skills", "guard", "codex", "claude"],
+  "skills": "./skills/",
+  "hooks": "./hooks/codex-hooks.json",
+  "interface": {
+    "displayName": "Anchor",
+    "shortDescription": "Token governor, Guard, skill bridge and dashboard",
+    "developerName": "Ahmed GHALMI",
+    "category": "Productivity"
+  }
+}

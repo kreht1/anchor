@@ -27,6 +27,9 @@ const CCR = require('./lib/ccr');
 const INST = require('./lib/installs');
 const GUARD = require('./lib/guard');
 const TRASH = require('./lib/trash');
+const CX = require('./lib/codex');
+const SP = require('./lib/skillport');
+const SDIR = require('./lib/skilldir');
 const MODELS = require('./lib/models');
 const tokenAudit = require('./lib/tokens-worker'); // the token audit, off the main thread
 
@@ -155,6 +158,13 @@ async function api(req, res, url) {
     return r ? send(res, 200, r) : send(res, 404, { error: 'unknown run' });
   }
   if (m === 'GET' && parts[0] === 'hub' && parts[1] && parts[2] === 'file') return send(res, 200, HUB.readFileIn(parts[1], q.get('rel')));
+  // Codex: install state, usage and limits from its own logs, and the skill bridge
+  if (m === 'GET' && parts[0] === 'codex' && !parts[1]) {
+    const all = SK.list().skills;
+    return send(res, 200, { status: CX.status(), usage: CX.usage(Math.min(Number(q.get('days')) || 7, 30)), bridge: SP.catalog(all),
+      ported: SP.ported(), native: CX.skills().filter(s => !s.port).map(s => ({ name: s.name, plugin: s.plugin || null, source: s.source, description: s.description, bom: s.bom })) });
+  }
+  if (m === 'GET' && parts[0] === 'skilldir') return send(res, 200, await SDIR.search(q.get('q')));
 
   // state-changing calls: same-origin page only (custom header forces a CORS preflight that is never granted)
   if (req.headers['x-anchor'] !== '1') return send(res, 403, { error: 'missing x-anchor header' });
@@ -170,7 +180,24 @@ async function api(req, res, url) {
   if (m === 'POST' && parts[0] === 'skills' && parts[1] === 'toggle') return send(res, 200, SK.toggle(body.id, body.source, !!body.enabled));
   if (m === 'POST' && parts[0] === 'skills' && parts[1] === 'verdict') return send(res, 200, SK.setVerdict(body.id, body.verdict, body.note));
   if (m === 'POST' && parts[0] === 'hub' && parts[1] === 'inspect') return send(res, 200, await HUB.inspect(body.repo, body.path));
-  if (m === 'POST' && parts[0] === 'hub' && parts[1] === 'install') return send(res, 200, HUB.install(body.id, body.rel, body.name));
+  if (m === 'POST' && parts[0] === 'hub' && parts[1] === 'install') return send(res, 200, HUB.install(body.id, body.rel, body.name, body.target || 'claude'));
+  if (m === 'POST' && parts[0] === 'codex' && parts[1] === 'port') {
+    const all = SK.list(true).skills, ids = [].concat(body.ids || []).map(String).slice(0, 200), done = [], failed = [];
+    for (const id of ids) {
+      const s = all.find(x => x.id === id);
+      try { if (!s) throw new Error('no such skill'); done.push(SP.port(s, { known: all, force: body.force === true })); } catch (e) { failed.push({ id, error: e.message }); }
+    }
+    if (done.length > 1) SP.relink(all);
+    kv.write('codex-skills-snapshot.json', {});
+    return send(res, 200, { done, failed });
+  }
+  if (m === 'POST' && parts[0] === 'codex' && parts[1] === 'unport') { const r = SP.unport(String(body.name || '')); kv.write('codex-skills-snapshot.json', {}); return send(res, 200, r); }
+  if (m === 'POST' && parts[0] === 'codex' && parts[1] === 'sync') { const r = SP.sync(SK.list(true).skills); kv.write('codex-skills-snapshot.json', {}); return send(res, 200, r); }
+  if (m === 'POST' && parts[0] === 'codex' && parts[1] === 'setup') {
+    // the same steps as `anchor codex setup`, run as a child so its output can be shown as is
+    const r = require('child_process').spawnSync(process.execPath, [path.join(__dirname, 'bin', 'anchor.js'), 'codex', 'setup', ...(body.skills === false ? ['--no-skills'] : [])], { encoding: 'utf8', timeout: 300000, windowsHide: true });
+    return send(res, 200, { ok: r.status === 0, out: `${r.stdout || ''}${r.stderr || ''}`.trim() });
+  }
   if (m === 'DELETE' && parts[0] === 'hub' && parts[1]) return send(res, 200, HUB.discard(parts[1]));
   if (m === 'POST' && parts[0] === 'runs') {
     if (body.cwd && ['study', 'file', 'graph'].includes(body.kind)) FS.addRoot(body.cwd);

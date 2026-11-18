@@ -467,3 +467,20 @@
 .btn.danger, .btn.primary.danger { background: var(--heart); color: #fff; box-shadow: none; }
 .x-badge { margin-left: auto; min-width: 18px; padding: 0 6px; border-radius: 9px; background: var(--heart); color: #fff; font-size: 11px; line-height: 18px; text-align: center; }
 @media (max-width: 720px) { .x-trash-hero, .x-trash-row { grid-template-columns: 1fr; } }
+
+/* Codex */
+.x-cx-steps { display: grid; gap: 4px; margin-top: 12px; }
+.x-cx-step { display: flex; gap: 8px; align-items: baseline; color: var(--ink-2); }
+.x-cx-step i { font-style: normal; width: 14px; color: var(--ink-3); }
+.x-cx-step.ok { color: var(--ink); }
+.x-cx-step.ok i { color: var(--done); }
+.x-cx-row { grid-template-columns: 18px minmax(0, 1fr) auto; align-items: center; gap: 12px; cursor: default; }
+.x-cx-row .sub { white-space: normal; }
+.x-cx-pad { width: 18px; }
+.seg { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.linklike { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; text-align: left; }
+.linklike:hover, .linklike:focus-visible { text-decoration: underline; }
+.x-cx-found { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-top: 12px; }
+.x-cx-card { display: grid; gap: 6px; align-content: start; }
+.x-cx-card b { overflow-wrap: anywhere; }
+@media (max-width: 720px) { .x-cx-row { grid-template-columns: 18px minmax(0, 1fr); } .x-cx-row > .tools { grid-column: 2; } }

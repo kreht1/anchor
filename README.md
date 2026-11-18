@@ -7,8 +7,8 @@
 
 <h1 align="center">Anchor</h1>
 
-**Keeps Claude Code steady on your limits.** Anchor is a token governor and dashboard for every Claude Code session on
-your computer. It stops a big session from re-paying an expired prompt cache, tells Claude when to `/compact` or
+**Keeps Claude Code and Codex steady on your limits.** Anchor is a token governor and dashboard for every Claude Code
+session on your computer, and it works the same way in Codex. It stops a big session from re-paying an expired prompt cache, tells Claude when to `/compact` or
 `/clear`, shows where your tokens went and what to change, and keeps your skills lean. It also shows what Claude and its
 agents are doing right now (with the real diff of every file edit), every project and conversation, and when your limits
 reset. **It runs only on your computer** (127.0.0.1): nothing is sent anywhere, and it needs no account, key or build
@@ -197,6 +197,57 @@ In the studio, Claude's file tools stay inside the project folder, and shell com
   Anchor cannot reset a limit; it shows when each one resets.
 - **Switching skills:** your own skills are switched off by moving their folder into `~/.anchor` and
   back. A plugin is switched in `~/.claude/settings.json`, which is backed up first.
+
+## Codex
+
+Anchor works in **Codex** (OpenAI's coding agent) too, with the same aims: the token saver, the context and `/compact`
+prompts, Guard, skill hints, the board and your usage. Codex reads Anchor's plugin as it is, so it is one install:
+
+```
+codex plugin marketplace add kreht1/anchor
+codex plugin add anchor@anchor
+```
+
+**Step-by-step guide for Codex users: [docs/CODEX.md](docs/CODEX.md).**
+
+Then, inside Codex, run `/hooks` once and approve Anchor's three hooks (Codex asks before running any plugin hook).
+If Anchor is already in Claude Code, `anchor codex setup` (or **Set up Codex** on the dashboard's Codex page) does all
+of it, adds a short board note to `~/.codex/AGENTS.md`, and brings your proven Claude skills along.
+
+What changes in Codex, so it feels native there:
+
+- **Session note and token saver** in Codex's terms: its shell and `apply_patch`, `$skill` and SKILL.md instead of the
+  Skill tool, `/new` where Claude has `/clear`.
+- **Governor**: the context tiers and the topic switch work the same, read from Codex's own session logs. The cache-cold
+  stop stays off, because Codex does not report how long its prompt cache lives.
+- **Guard** reads Codex's shell commands and its `apply_patch` edits (deleted files, `.git`, model files, big
+  removals). Codex has no "ask" answer yet, so a risky (not dangerous) call goes through with Guard's warning attached.
+- **Usage**: `anchor codex usage` and the Codex page show tokens, cache share, and Codex's own limit windows with
+  their reset times, exactly as Codex reported them.
+
+### Skill bridge: Claude skills in Codex
+
+Codex reads the same `SKILL.md` format, but many skills were written for Claude's tools. The **Codex** page lists every
+Claude skill you have (your own, plugin skills, claude.ai skills) with an honest verdict:
+
+- **Works as-is**: plain instructions.
+- **Adapted**: it names Claude tools (Read, Edit, TodoWrite, the Skill tool, subagents, WebFetch…). Anchor adds a short
+  "Running in Codex" note that maps only those tools to Codex's, resolves `${CLAUDE_PLUGIN_ROOT}` and
+  `${CLAUDE_SKILL_DIR}` so scripts and references still load, and names sibling skills the way Codex calls them.
+- **Claude-only**: it is built on something Codex does not have (artifacts, Claude in Chrome, claude.ai connectors,
+  the Claude app). You can still send it, but it will not work the same.
+
+**Send to Codex** copies the skill to `~/.agents/skills/<name>`; your original is never changed. **Sync** refreshes
+ports whose source changed. **Find skills** searches well-known collections (caveman, superpowers, Anthropic's skills,
+science skills…) and GitHub; each download is scanned in quarantine before you choose **Claude**, **Codex** or **both**.
+
+```
+anchor codex status                 # what is set up
+anchor codex skills                 # every Claude skill with its Codex verdict
+anchor codex port superpowers:brainstorming anthropic-skills:pdf
+anchor codex sync                   # re-port skills whose source changed
+anchor codex unport brainstorming
+```
 
 ## Without the plugin
 

@@ -208,7 +208,8 @@ function renderFound(el, list) {
   el.onclick = e => { const b = e.target.closest('[data-ins]'); if (b) { const s = list[b.dataset.ins]; inspectRepo(s.repo, s.path); } };
 }
 
-async function inspectRepo(repo, sub) {
+const TARGET_LABEL = { claude: 'Install to Claude', codex: 'Install to Codex', both: 'Install to Claude and Codex' };
+async function inspectRepo(repo, sub, target = 'claude') {
   const m = modal('<div class="x-thinking"><i></i><i></i><i></i> Downloading into quarantine and scanning every file…</div>', { wide: true });
   let meta;
   try { meta = await api('/api/hub/inspect', { method: 'POST', body: { repo, path: sub } }); } catch (e) { m.el.innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
@@ -221,12 +222,16 @@ async function inspectRepo(repo, sub) {
         <p class="sub">${esc(s.description)}</p><div class="bubble x-skill-md">${md(s.skillMd.replace(/^---[\s\S]*?---/, ''))}</div>
         <div class="tools" style="margin-top:12px"><input class="field" data-name="${i}" value="${esc(s.name.replace(/\s+/g, '-'))}" aria-label="Folder name">
           <label class="x-check"><input type="checkbox" data-ack="${i}"> I read the instructions${danger.length ? ' and the warnings' : ''}</label>
-          <button class="btn primary" type="button" data-install="${i}" disabled>Install to ~/.claude/skills</button></div></details>`).join('')
+          <select class="field" data-target="${i}" aria-label="Install where">${Object.entries(TARGET_LABEL).map(([k, v]) => `<option value="${k}" ${k === target ? 'selected' : ''}>${v.replace('Install to ', '')}</option>`).join('')}</select>
+          <button class="btn primary" type="button" data-install="${i}" disabled>${TARGET_LABEL[target]}</button></div></details>`).join('')
     : '<div class="empty">No SKILL.md found in that folder.</div>'}
     <h3>Files</h3><div class="x-files">${meta.files.slice(0, 200).map(f => `<button type="button" class="x-file" data-rel="${esc(f.rel)}"><span class="x-mono">${esc(f.rel)}</span><span class="sub">${bytes(f.size)}</span></button>`).join('')}</div>
     <pre class="x-fileview" id="hub-file" hidden></pre>
     <div class="tools" style="margin-top:14px"><button class="btn" type="button" id="hub-discard">Discard download</button></div>`;
-  m.el.addEventListener('change', e => { const c = e.target.closest('[data-ack]'); if (c) m.el.querySelector(`[data-install="${c.dataset.ack}"]`).disabled = !c.checked; });
+  m.el.addEventListener('change', e => {
+    const c = e.target.closest('[data-ack]'); if (c) m.el.querySelector(`[data-install="${c.dataset.ack}"]`).disabled = !c.checked;
+    const t = e.target.closest('[data-target]'); if (t) m.el.querySelector(`[data-install="${t.dataset.target}"]`).textContent = TARGET_LABEL[t.value];
+  });
   m.el.addEventListener('click', async e => {
     const f = e.target.closest('[data-rel]');
     if (f) {
@@ -235,7 +240,12 @@ async function inspectRepo(repo, sub) {
     const b = e.target.closest('[data-install]');
     if (b) {
       const s = meta.skills[b.dataset.install];
-      try { const r = await api('/api/hub/install', { method: 'POST', body: { id: meta.id, rel: s.rel, name: m.el.querySelector(`[data-name="${b.dataset.install}"]`).value } }); toast(`Installed to ${r.dest}`); refreshSkillViews(true); m.close(); } catch (err) { toast(err.message); }
+      const tgt = m.el.querySelector(`[data-target="${b.dataset.install}"]`).value;
+      try {
+        const r = await api('/api/hub/install', { method: 'POST', body: { id: meta.id, rel: s.rel, name: m.el.querySelector(`[data-name="${b.dataset.install}"]`).value, target: tgt } });
+        toast([r.dest && 'Installed for Claude', r.codex && `in Codex as ${r.codex.call} (${r.codex.verdict === 'works' ? 'works as-is' : r.codex.verdict})`].filter(Boolean).join(' · '));
+        refreshSkillViews(true); if (views.codex && current && current.view === views.codex) views.codex.load(); m.close();
+      } catch (err) { toast(err.message); }
     }
     if (e.target.closest('#hub-discard')) { await api(`/api/hub/${meta.id}`, { method: 'DELETE' }).catch(() => {}); toast('Download discarded'); m.close(); }
   });

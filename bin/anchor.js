@@ -58,6 +58,16 @@ const HELP = `Anchor: a dashboard for every Claude Code session on this computer
                            and progress (a progress.json next to the log is picked up automatically)
   anchor unjob <id|log>
 
+  anchor codex [status]        is Anchor set up in Codex (OpenAI's coding agent)?
+  anchor codex setup           add Anchor to Codex: plugin (hooks, skills), AGENTS.md note, your proven skills ported
+  anchor codex skills [--json] every Claude skill with its Codex verdict: works as-is, adapted, or Claude-only
+  anchor codex port <id...> [--force] [--name n]
+                           bring Claude skills to Codex (~/.agents/skills), Claude tools mapped to Codex's
+  anchor codex unport <name>   remove a ported skill          anchor codex sync   refresh ports whose source changed
+  anchor codex usage [--days N]
+                           Codex tokens, cache share, and its own limit windows with reset times
+  anchor codex uninstall [--skills]
+
   anchor shortcut              put an "Anchor" shortcut on the desktop: one double-click starts everything
   anchor install              start at login, desktop shortcut, 'anchor' on PATH, Claude skill + CLAUDE.md note
   anchor uninstall             undo everything install did (keeps your board)
@@ -77,6 +87,8 @@ function args(argv) {
     else if (a === '--pid') out.pid = Number(argv[++i]);
     else if (a === '--progress') out.progress = argv[++i];
     else if (a === '--page') out.page = String(argv[++i] || '').replace(/[^\w-]/g, '');
+    else if (a === '--agent') out.agent = String(argv[++i] || '').toLowerCase();
+    else if (a === '--name') out.name = argv[++i];
     else if (a.startsWith('--')) out[a.slice(2)] = true;
     else out._.push(a);
   }
@@ -138,7 +150,10 @@ require(${JSON.stringify(path.join(ROOT, 'bin', 'anchor.js'))});
 }
 
 // SessionStart hook: fast, silent, never fails the session
-async function hook() {
+async function hook(agent) {
+  let input = {};
+  if (!process.stdin.isTTY) { try { let raw = ''; for await (const c of process.stdin) raw += c; input = JSON.parse(raw || '{}'); } catch { input = {}; } }
+  if (require('../lib/codex').isCodex(agent, input)) return codexHook();
   try { writeLauncher(); } catch { /* read-only home: skip */ }
   let up = !!(await ping(300));
   if (!up) {
@@ -184,6 +199,173 @@ function skillDiscipline(lean) {
 ${rule}${snap.proven && snap.proven.length ? ` Proven for this user: ${few(snap.proven, lean ? 10 : 25)}.` : ''}${snap.failing && snap.failing.length ? ` Reported failing (avoid unless asked): ${few(snap.failing, lean ? 8 : 15)}.` : ''}${snap.off && snap.off.length && !lean ? ` Turned off by the user (do not use): ${few(snap.off, 15)}.` : ''}`;
 }
 
+// ---------------------------------------------------------------- Codex
+// The same aims in Codex's own words: its shell and apply_patch instead of Claude's tools, $skill / SKILL.md instead of
+// the Skill tool, /new instead of /clear. Same board, same token saver, same skill hints.
+const CODEX_LEAN = 'TOKEN SAVER (set in Anchor): search with rg before reading, and print only the lines you need (rg -n, sed -n, head, Select-Object -First); cap command output (tail, head, quiet flags); batch independent commands; never re-read a file you just patched; PDFs a few pages at a time; open a skill\'s SKILL.md only when it clearly fits the real task, and once per session; keep answers short. When a session gets long, suggest /compact at a milestone, and /new for a new topic. Long jobs: split into phases that hand off through files. Leftover files for the user to delete: anchor trash add <path> --why "...".';
+
+function codexSkillRule(lean) {
+  const kv = require('../lib/kv');
+  if (kv.read('settings.json', {}).skillDiscipline === false) return '';
+  const snap = require('../lib/skillmatch').codexSnapshot();
+  const ids = new Set((snap.index || []).map(s => s.id));
+  const proven = (kv.read('skills-snapshot.json', {}).proven || []).map(id => (snap.index || []).find(s => s.from === id || s.id === id)).filter(Boolean).map(s => s.id).filter(id => ids.has(id));
+  const rule = lean
+    ? 'SKILLS (from Anchor). Before real work (building, debugging, planning, documents, data), check your skills list; when one clearly fits, open its SKILL.md and follow it first; process skills (planning, debugging, testing) come before implementation skills. Skip skills for quick questions and one-line changes. Skills ported from Claude end with a "Running in Codex" note: follow it. Anchor names a skill on a message when it clearly matches.'
+    : 'SKILL DISCIPLINE (set by the user in Anchor). Before you respond to any request, check your skills list. If a skill could plausibly apply, open its SKILL.md and follow it first; process skills (planning, debugging, brainstorming, testing) come before implementation skills. Skills ported from Claude end with a "Running in Codex" note that maps Claude tools to yours: follow it. Anchor also names matching skills on each message; treat those as a strong hint.';
+  return `\n\n${rule}${proven.length ? ` Proven for this user: ${[...new Set(proven)].slice(0, lean ? 10 : 25).join(', ')}.` : ''}`;
+}
+
+async function codexHook() {
+  let up = !!(await ping(300));
+  if (!up) {
+    try { const fd = fs.openSync(LOG, 'a'); spawn(process.execPath, [path.join(ROOT, 'server.js')], { detached: true, stdio: ['ignore', fd, fd], windowsHide: true, cwd: ROOT }).unref(); up = true; } catch { /* leave it */ }
+  }
+  try { writeLauncher(); } catch { /* read-only home */ }
+  const mc = 'node "$HOME/.anchor/anchor.js"';
+  const lean = tokenSaverOn();
+  let ctx = up ? `Anchor (local dashboard ${URL_}): anchor = ${mc}. Board: anchor add "title" -p <project> [--doing], anchor done <id>, anchor list. Usage and resets: anchor codex usage. Run these with your shell; don't announce the bookkeeping.` : '';
+  if (lean) ctx += `\n\n${CODEX_LEAN}`;
+  ctx += codexSkillRule(lean);
+  process.stdout.write(JSON.stringify({ hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: ctx.trim() } }));
+}
+
+function agentsNote(mc) {
+  return `${MARK_START}
+# Anchor (dashboard at http://127.0.0.1:${P.PORT})
+The user follows their coding-agent work in a local dashboard. Keep it useful, without asking:
+- When you plan multi-step work or leave work pending, record each item: \`${mc} add "short title" -p <project> [-n "notes"] [--doing]\`. Move items as you go (\`${mc} doing|done <id>\`); \`${mc} list -p <project>\` shows what is open.
+- When you start a long download into a known folder or file, also run \`${mc} watch "<path>" --label "<name>" [--gb <expected size>]\`.
+- Skills ported from Claude by Anchor live in ~/.agents/skills; each ends with a "Running in Codex" note that maps Claude tools to yours.
+${MARK_END}`;
+}
+
+function codexRun(args) {
+  const [cmd, argv] = require('../lib/codex').run(args);
+  const r = require('child_process').spawnSync(cmd, argv, { encoding: 'utf8', windowsHide: true, timeout: 180000 });
+  return { ok: r.status === 0, out: `${r.stdout || ''}${r.stderr || ''}`.trim() };
+}
+
+// where Codex should get Anchor from: this folder when it is a development checkout, else the public repository
+function codexSource() { return /[\\/]\.claude[\\/]plugins[\\/]/.test(ROOT) ? 'kreht1/anchor' : ROOT; }
+
+function claudeSkillList() { return require('../lib/skills').list(true).skills; }
+
+async function codex(a) {
+  const CX = require('../lib/codex'), SP = require('../lib/skillport');
+  const sub = a._.shift() || 'status';
+  switch (sub) {
+    case 'status': {
+      const s = CX.status();
+      const tick = b => (b ? '✓' : '·');
+      console.log(`${tick(s.installed)} Codex ${s.installed ? s.version : 'not found (npm i -g @openai/codex)'}`);
+      console.log(`${tick(s.loggedIn)} signed in${s.loggedIn ? '' : ' (run: codex login)'}`);
+      console.log(`${tick(s.marketplace)} Anchor marketplace${s.marketplaceSource ? `  ${s.marketplaceSource}` : ''}`);
+      console.log(`${tick(s.pluginEnabled)} Anchor plugin${s.pluginVersions.length ? `  ${s.pluginVersions.join(', ')}` : ''}`);
+      console.log(`${tick(s.hooksFeature)} hooks feature${s.hooksFeature ? ' (approve Anchor\'s hooks once with /hooks inside Codex)' : ' is off in config.toml'}`);
+      console.log(`${tick(s.agentsNote)} note in ${CX.PATHS.AGENTS_MD}`);
+      const p = SP.ported();
+      console.log(`${tick(p.length)} ${p.length} Claude skill${p.length === 1 ? '' : 's'} ported to ${SP.DEST}`);
+      if (!s.plugin || !s.agentsNote) console.log('\nSet it all up with: anchor codex setup');
+      break;
+    }
+    case 'setup': {
+      const s = CX.status();
+      if (!s.installed) { console.log('Codex is not installed. Install it first: npm i -g @openai/codex   (then: codex login)'); process.exitCode = 1; break; }
+      const src = a.source || codexSource();
+      if (!s.marketplace) { const r = codexRun(['plugin', 'marketplace', 'add', src]); console.log(r.ok ? `✓ marketplace added   ${src}` : `· marketplace: ${r.out.split('\n').pop()}`); }
+      else console.log(`✓ marketplace          ${s.marketplaceSource}`);
+      if (!s.plugin) { const r = codexRun(['plugin', 'add', 'anchor@anchor']); console.log(r.ok ? '✓ plugin installed     anchor@anchor' : `· plugin: ${r.out.split('\n').pop()}`); }
+      else {
+        // bring Codex's copy up to this version: refresh the marketplace, then add the plugin again (it replaces the cache)
+        const ver = require('../package.json').version;
+        if (!s.pluginVersions.includes(ver)) { codexRun(['plugin', 'marketplace', 'upgrade', 'anchor']); const r = codexRun(['plugin', 'add', 'anchor@anchor']); console.log(r.ok ? `✓ plugin updated       anchor@anchor ${ver}` : `· plugin update: ${r.out.split('\n').pop()}`); }
+        else console.log(`✓ plugin installed     anchor@anchor ${ver}`);
+      }
+      const mc = process.platform === 'win32' && fs.existsSync(SHIM) ? 'anchor' : 'node "$HOME/.anchor/anchor.js"';
+      fs.mkdirSync(CX.PATHS.HOME, { recursive: true });
+      let md = ''; try { md = fs.readFileSync(CX.PATHS.AGENTS_MD, 'utf8'); } catch { /* none yet */ }
+      const re = new RegExp(`${MARK_START}[\\s\\S]*?${MARK_END}`);
+      md = re.test(md) ? md.replace(re, agentsNote(mc)) : `${md.replace(/\s*$/, '')}${md.trim() ? '\n\n' : ''}${agentsNote(mc)}\n`;
+      fs.writeFileSync(CX.PATHS.AGENTS_MD, md);
+      console.log(`✓ note for every Codex session  ${CX.PATHS.AGENTS_MD}`);
+      try { writeLauncher(); } catch { /* fine */ }
+      // the skills that already work for this user in Claude come along (Claude-only ones stay behind)
+      if (!a['no-skills']) {
+        const all = claudeSkillList();
+        const proven = new Set(require('../lib/kv').read('skills-snapshot.json', {}).proven || []);
+        const cat = SP.catalog(all);
+        const done = [];
+        for (const c of cat.filter(c => proven.has(c.id) && !c.inCodex && c.verdict !== 'claude-only' && !c.id.startsWith('anchor:'))) {
+          try { done.push(SP.port(all.find(s => s.id === c.id), { known: all }).call); } catch { /* skip that one */ }
+        }
+        if (done.length) SP.relink(all);
+        console.log(done.length ? `✓ ported your proven skills  ${done.join(' ')}` : '✓ skills: nothing new to port (see: anchor codex skills)');
+      }
+      require('../lib/kv').write('codex-skills-snapshot.json', {});
+      console.log('\nLast step, inside Codex: run /hooks once and approve Anchor\'s hooks (Codex asks before running any plugin hook).');
+      if (!s.loggedIn) console.log('Codex is not signed in yet: codex login');
+      break;
+    }
+    case 'skills': {
+      const cat = SP.catalog(claudeSkillList());
+      if (a.json) { console.log(JSON.stringify(cat, null, 1)); break; }
+      const label = { works: 'works as-is', adapted: 'adapted    ', 'claude-only': 'Claude-only' };
+      for (const c of cat.sort((x, y) => x.verdict.localeCompare(y.verdict) || x.id.localeCompare(y.id))) {
+        console.log(`${c.ported ? (c.ported.stale ? '↻' : '✓') : c.inCodex ? '•' : ' '} ${label[c.verdict]}  ${c.id.padEnd(42)} ${c.verdict === 'works' ? '' : c.why}`);
+      }
+      console.log('\n✓ ported   ↻ source changed (anchor codex sync)   • Codex has it natively\nPort with: anchor codex port <id> [<id>...] [--force for Claude-only]');
+      break;
+    }
+    case 'port': {
+      const all = claudeSkillList();
+      if (!a._.length) { console.log('Which skills? anchor codex port <id> [<id>...]  (ids from: anchor codex skills)'); break; }
+      for (const id of a._) {
+        const s = all.find(x => x.id === id) || all.find(x => x.name === id);
+        if (!s) { console.log(`· ${id}: no such Claude skill`); continue; }
+        try { const r = SP.port(s, { known: all, force: !!a.force, name: a._.length === 1 ? a.name : undefined }); console.log(`✓ ${s.id} → ${r.call}  (${r.verdict}: ${r.why})`); }
+        catch (e) { console.log(`· ${s.id}: ${e.message}`); }
+      }
+      if (a._.length > 1) SP.relink(all); // skills ported together now name each other as Codex calls them
+      require('../lib/kv').write('codex-skills-snapshot.json', {});
+      break;
+    }
+    case 'unport': case 'remove': {
+      for (const n of a._) { try { SP.unport(n); console.log(`removed ${n} from Codex`); } catch (e) { console.log(`· ${e.message}`); } }
+      require('../lib/kv').write('codex-skills-snapshot.json', {});
+      break;
+    }
+    case 'sync': {
+      const r = SP.sync(claudeSkillList());
+      console.log(`${r.updated.length} updated${r.updated.length ? `: ${r.updated.join(', ')}` : ''} · ${r.same.length} unchanged${r.missing.length ? ` · source gone: ${r.missing.join(', ')}` : ''}`);
+      require('../lib/kv').write('codex-skills-snapshot.json', {});
+      break;
+    }
+    case 'usage': {
+      const u = CX.usage(a.days || 7);
+      if (a.json) { console.log(JSON.stringify(u, null, 1)); break; }
+      if (!u.sessions) { console.log('No Codex sessions in the last 7 days.'); break; }
+      const when = iso => new Date(iso).toLocaleString(undefined, { weekday: 'short', hour: '2-digit', minute: '2-digit' });
+      const lim = (n, w) => w ? `${n}: ${w.pct != null ? `${w.pct}% used` : 'unknown'}${w.resetAt ? `, resets ${when(w.resetAt)}` : ''}` : null;
+      console.log(`Codex · last ${u.days} days: ${fmtTok(u.tokens)} tokens in ${u.sessions} session${u.sessions > 1 ? 's' : ''} (${u.cacheShare}% of input from cache) · last 5 h: ${fmtTok(u.last5h)}`);
+      if (u.limits) console.log([lim(`Short window${u.limits.primary && u.limits.primary.minutes ? ` (${Math.round(u.limits.primary.minutes / 60)} h)` : ''}`, u.limits.primary), lim('Week', u.limits.secondary)].filter(Boolean).join(' · ') + `  (as Codex reported ${when(u.limits.at)})`);
+      for (const s of u.recent.slice(0, 5)) console.log(`  ${s.project || '?'}  ${fmtTok(s.total)} tokens, context ${fmtTok(s.context)}${s.window ? `/${fmtTok(s.window)}` : ''}  ${s.firstPrompt ? `"${s.firstPrompt.slice(0, 60).replace(/\s+/g, ' ')}"` : ''}`);
+      break;
+    }
+    case 'uninstall': {
+      let md = ''; try { md = fs.readFileSync(CX.PATHS.AGENTS_MD, 'utf8'); } catch { /* none */ }
+      const out = md.replace(new RegExp(`\\n*${MARK_START}[\\s\\S]*?${MARK_END}\\n?`), '\n');
+      if (out !== md) { fs.writeFileSync(CX.PATHS.AGENTS_MD, out.replace(/\n{3,}/g, '\n\n')); console.log(`cleaned ${CX.PATHS.AGENTS_MD}`); }
+      if (a.skills) for (const p of SP.ported()) { SP.unport(p.name); console.log(`removed ported skill ${p.name}`); }
+      const r = codexRun(['plugin', 'remove', 'anchor@anchor']);
+      console.log(r.ok ? 'removed the Anchor plugin from Codex' : `· ${r.out.split('\n').pop() || 'plugin not removed'}`);
+      console.log(`Ported skills are kept unless you pass --skills. Remove the marketplace with: codex plugin marketplace remove anchor`);
+      break;
+    }
+    default: console.log(`Unknown: anchor codex ${sub}. Try: status, setup, skills, port, unport, sync, usage, uninstall`); process.exitCode = 1;
+  }
+}
+
 function fmtTok(n) { return n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1e3 ? Math.round(n / 1e3) + 'k' : String(n); }
 function usage() {
   const u = require('../lib/usage').summary();
@@ -197,6 +379,13 @@ function usage() {
   const w = u.weekly;
   console.log(`Week: ${w.pct != null ? `about ${w.pct}% of your usual cap, ` : ''}${fmtTok(w.used)} tokens, ${w.msgs} replies.${w.nextReset ? ` Resets ${when(w.nextReset)} (in ${left(w.nextReset)}).` : ''}${w.limited ? ' LIMIT REACHED.' : ''}`);
   console.log('(From local files; percentages are estimates from your past limit hits. /usage in Claude Code is exact.)');
+  try {
+    const c = require('../lib/codex').usage(7);
+    if (c.sessions) {
+      const p = c.limits && c.limits.primary, w = c.limits && c.limits.secondary;
+      console.log(`Codex (7 days): ${fmtTok(c.tokens)} tokens in ${c.sessions} sessions${p && p.pct != null ? ` · short window ${p.pct}% used${p.resetAt ? `, resets ${when(p.resetAt)}` : ''}` : ''}${w && w.pct != null ? ` · week ${w.pct}%${w.resetAt ? `, resets ${when(w.resetAt)}` : ''}` : ''}. Details: anchor codex usage`);
+    }
+  } catch { /* no Codex */ }
 }
 
 function fromClaude() { return process.env.CLAUDECODE === '1' || !!process.env.CLAUDE_CODE_ENTRYPOINT; }
@@ -296,7 +485,8 @@ function uninstall() {
       case 'start': if (await ensureServer()) { console.log(`Anchor: ${URL_}`); if (!a['no-open']) openUi(a.browser); } break;
       case 'serve': require('../server.js'); break;
       case 'open': if (await ensureServer()) openUi(a.browser, a.page); break;
-      case 'hook': await hook(); break;
+      case 'hook': await hook(a.agent); break;
+      case 'codex': await codex(a); break;
       case 'guard': { // PreToolUse hook: read the tool call, answer allow (silence), ask or deny
         let raw = '';
         for await (const c of process.stdin) raw += c;
@@ -306,18 +496,21 @@ function uninstall() {
         const r = G.evaluate(input);
         if (r.decision === 'allow') break;
         G.log(input, r);
-        if (r.decision === 'deny' && r.targets && r.targets.length) { try { const TR = require('../lib/trash'); for (const p of r.targets) TR.add(p, { from: 'guard', why: `Claude tried to delete it; Guard ${r.decision === 'deny' ? 'blocked' : 'asked about'} it (${r.why}).`, cwd: input.cwd, session: input.session_id }); } catch { /* never break the hook */ } }
+        const isCx = require('../lib/codex').isCodex(a.agent, input);
+        if (r.decision === 'deny' && r.targets && r.targets.length) { try { const TR = require('../lib/trash'); for (const p of r.targets) TR.add(p, { from: 'guard', why: `${isCx ? 'Codex' : 'Claude'} tried to delete it; Guard ${r.decision === 'deny' ? 'blocked' : 'asked about'} it (${r.why}).`, cwd: input.cwd, session: input.session_id }); } catch { /* never break the hook */ } }
+        // Codex has no "ask" answer yet: there a risky call is allowed through with Guard's note, a dangerous one denied
+        if (isCx && r.decision === 'ask') { process.stdout.write(JSON.stringify({ hookSpecificOutput: { hookEventName: 'PreToolUse', additionalContext: G.reason(r) } })); break; }
         process.stdout.write(JSON.stringify({ hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: r.decision, permissionDecisionReason: G.reason(r) } }));
         break;
       }
       case 'prompt': { // UserPromptSubmit hook: the token governor (may stop a cold big session once), then skill hints
         let raw = '';
         for await (const c of process.stdin) raw += c;
-        let gov = {};
-        try { gov = require('../lib/governor').decide(JSON.parse(raw || '{}')); } catch { gov = {}; }
+        let gov = {}, isCx = a.agent === 'codex';
+        try { const input = JSON.parse(raw || '{}'); isCx = require('../lib/codex').isCodex(a.agent, input); gov = require('../lib/governor').decide(input, undefined, undefined, isCx); } catch { gov = {}; }
         if (gov.block) { process.stdout.write(JSON.stringify({ decision: 'block', reason: gov.reason })); break; }
         let hint = '';
-        try { const out = require('../lib/skillmatch').hook(raw); if (out) hint = JSON.parse(out).hookSpecificOutput.additionalContext; } catch { /* never block a message */ }
+        try { const out = require('../lib/skillmatch').hook(raw, isCx); if (out) hint = JSON.parse(out).hookSpecificOutput.additionalContext; } catch { /* never block a message */ }
         const ctx = [gov.note, hint].filter(Boolean).join('\n');
         if (ctx) process.stdout.write(JSON.stringify({ hookSpecificOutput: { hookEventName: 'UserPromptSubmit', additionalContext: ctx } }));
         break;

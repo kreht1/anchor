@@ -1,5 +1,24 @@
 # Changelog
 
+## 4.2.0: Anchor in Codex, and a skill bridge
+
+- **Codex support.** Codex installs Anchor from the same marketplace (`codex plugin marketplace add kreht1/anchor`,
+  `codex plugin add anchor@anchor`, then approve its hooks with `/hooks`). A Codex manifest and hooks file give it the
+  session note, token saver, governor tiers, topic-switch prompt, Guard and skill hints, all in Codex's own terms
+  (shell, `apply_patch`, `$skill`, `/new`). `anchor codex setup` does it for you and adds a board note to
+  `~/.codex/AGENTS.md`.
+- **Skill bridge.** A new **Codex** page and `anchor codex skills|port|unport|sync`: every Claude skill with a
+  verdict (works as-is, adapted, Claude-only), ported into `~/.agents/skills` with a Codex frontmatter, Claude path
+  variables resolved, a "Running in Codex" note mapping the Claude tools it uses, and sibling skills named as Codex
+  calls them. Sync re-ports a skill when its source changes; folders Anchor did not make are never touched.
+- **Find skills.** Well-known collections (caveman, superpowers, Anthropic's skills, science skills…) plus a GitHub
+  search; installs go through the existing quarantine scan and can target Claude, Codex or both. The Skills page's
+  installer gained the same choice.
+- **Codex usage.** `anchor codex usage`, a Codex line in `anchor usage`, and the Codex page read Codex's session logs:
+  tokens, cache share, context per session, and Codex's own limit windows with reset times.
+- **Guard** understands Codex's `apply_patch` edits and argv-style shell commands.
+- **Fix found on the way:** a SKILL.md saved with a byte-order mark is silently skipped by Codex; ports never have one.
+
 ## 4.1.0: Trash, per-agent costs, and a playbook for long jobs
 
 Built from three measured head-to-head runs (the same task done by one agent with Anchor and one without).
